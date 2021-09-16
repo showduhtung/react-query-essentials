@@ -16,12 +16,16 @@ export default function App() {
 }
 
 function PokemonSearch({ pokemon }) {
-  const queryInfo = useQuery(pokemon, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return axios
-      .get(`https://pokeapi.co/api/v2/pokemon/${pokemon}`)
-      .then((res) => res.data);
-  });
+  const queryInfo = useQuery(
+    ["pokemon", pokemon],
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return axios
+        .get(`https://pokeapi.co/api/v2/pokemon/${pokemon}`)
+        .then((res) => res.data);
+    },
+    { enabled: pokemon }
+  );
 
   return queryInfo.isLoading ? (
     "Loading..."
