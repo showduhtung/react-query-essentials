@@ -1,20 +1,41 @@
 import { useQuery } from "react-query";
 import axios from "axios";
+import { ReactQueryDevtools } from "react-query-devtools";
 
-function App() {
-  const queryInfo = useQuery("pokemon", () =>
-    axios
-      .get("https://pokeapi.co/api/v2/pokemon")
-      .then((res) => res.data.results)
+function Pokemon() {
+  const queryInfo = useQuery(
+    "pokemon",
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      return axios
+        .get("https://pokeapi.co/api/v2/pokemon")
+        .then((res) => res.data.results);
+    },
+    {
+      refetchOnWindowFocus: false,
+    }
   );
 
   console.log({ queryInfo });
   return (
     <div>
-      {queryInfo.data?.map((result) => {
-        return <div key={result.name}>{result.name}</div>;
-      })}
+      {queryInfo.isLoading ? (
+        <div>Loading... </div>
+      ) : (
+        queryInfo.data.map((result) => {
+          return <div key={result.name}>{result.name}</div>;
+        })
+      )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <Pokemon />
+      <ReactQueryDevtools />
+    </>
   );
 }
 
