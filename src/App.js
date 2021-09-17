@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery, queryCache } from "react-query";
 import { ReactQueryDevtools } from "react-query-devtools";
 import axios from "axios";
 
@@ -42,6 +42,9 @@ function Post({ postId, setPostId }) {
         .then((res) => res.data),
     {
       enabled: postId > -1,
+      initialData: () =>
+        queryCache.getQueryData("posts")?.find((post) => postId === post.id),
+      initialStale: true,
     }
   );
   return (
@@ -63,7 +66,6 @@ export default function App() {
       ) : (
         <Posts setPostId={setPostId} />
       )}
-      {/* <MyPosts /> */}
       <ReactQueryDevtools />
     </div>
   );
