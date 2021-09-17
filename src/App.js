@@ -18,20 +18,21 @@ function PokemonSearch({ pokemon }) {
   const queryInfo = useQuery(
     ["pokemon", pokemon],
     () => {
-      const source = CancelToken.source();
-      const promise = new Promise((resolve) => setTimeout(resolve, 1000)).then(
-        () => {
-          return axios
-            .get(`https://pokeapi.co/api/v2/pokemon/${pokemon}`, {
-              cancelToken: source.token,
-            })
-            .then((res) => res.data);
-        }
-      );
-      promise.cancel = () => {
-        source.cancel("Query was cancelled by React Query");
-      };
+      // const source = CancelToken.source();
+      const controller = new AbortController();
 
+      const { signal } = controller;
+      const promise = new Promise((resolve) => setTimeout(resolve, 1000))
+        .then(() => {
+          return fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon}`, {
+            method: "get",
+            signal,
+          });
+        })
+        .then((res) => res.json());
+      promise.cancel = () => {
+        controller.abort();
+      };
       return promise;
     },
     {
