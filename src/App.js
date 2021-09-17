@@ -4,11 +4,15 @@ import { ReactQueryDevtools } from "react-query-devtools";
 import axios from "axios";
 
 function Posts({ setPostId }) {
-  const postsQuery = useQuery("posts", () =>
-    axios
+  const postsQuery = useQuery("posts", async () => {
+    const posts = await axios
       .get("https://jsonplaceholder.typicode.com/posts")
-      .then((res) => res.data)
-  );
+      .then((res) => res.data);
+    posts.forEach((post) => {
+      queryCache.setQueryData(["post", post.id], post);
+    });
+    return posts;
+  });
   return (
     <div>
       <h1>Posts</h1>
@@ -42,9 +46,6 @@ function Post({ postId, setPostId }) {
         .then((res) => res.data),
     {
       enabled: postId > -1,
-      initialData: () =>
-        queryCache.getQueryData("posts")?.find((post) => postId === post.id),
-      initialStale: true,
     }
   );
   return (
@@ -53,6 +54,9 @@ function Post({ postId, setPostId }) {
       <br />
       <br />
       {postQuery.isLoading ? "Loading... " : postQuery.data.title}
+      <br />
+      <br />
+      {postQuery.isFetching && "Updating..."}
     </div>
   );
 }
