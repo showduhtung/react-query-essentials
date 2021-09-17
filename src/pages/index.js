@@ -1,15 +1,34 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useReducer } from 'react'
 import { queryCache, useQuery } from 'react-query'
 import axios from 'axios'
 
-export default function Posts() {
-  const randomQuery = useQuery('random', async () => {
-    return axios.get('/api/random').then(res => res.data)
-  })
-  useEffect(() => console.log(randomQuery))
+export default function App() {
+  const [show, toggle] = useReducer(d => !d, true)
+  return (
+    <div>
+      <button onClick={toggle}>Toggle Random</button>
+      <button
+        onClick={() =>
+          queryCache.invalidateQueries('random', {
+            refetchActive: false,
+          })
+        }
+      >
+        Invalidate Random Number
+      </button>
+      {show && <RandomNumber />}
+    </div>
+  )
+}
 
-  const invalidateRandomNumber = () =>
-    queryCache.invalidateQueries('random')
+function RandomNumber() {
+  const randomQuery = useQuery(
+    'random',
+    async () => axios.get('/api/random').then(res => res.data)
+    // {
+    //   staleTime: Infinity,
+    // }
+  )
 
   return (
     <div>
@@ -17,13 +36,8 @@ export default function Posts() {
       <h2>
         {randomQuery.isLoading
           ? 'Loading random number...'
-          : randomQuery.data.random * 1000}
+          : Math.round(randomQuery.data.random * 1000)}
       </h2>
-      <div>
-        <button onClick={() => invalidateRandomNumber()}>
-          Invalidate Random Number
-        </button>
-      </div>
     </div>
   )
 }
