@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useQuery } from "react-query";
 import { ReactQueryDevtools } from "react-query-devtools";
 import axios from "axios";
+import existingUser from "./existingUser";
 
 // user email:
 // https://jsonplaceholder.typicode.com/users?email=${email}
@@ -11,40 +12,25 @@ import axios from "axios";
 const email = "Sincere@april.biz";
 
 function MyPosts() {
-  const userQuery = useQuery("user", () =>
-    axios
-      .get(`https://jsonplaceholder.typicode.com/users?email=${email}`)
-      .then((res) => res.data[0])
-  );
-
-  const postsQuery = useQuery(
-    "posts",
-    () =>
-      axios
-        .get(
-          `https://jsonplaceholder.typicode.com/posts?userId=${userQuery.data.id}`
-        )
-        .then((res) => res.data),
+  const userQuery = useQuery(
+    "user",
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return axios
+        .get(`https://jsonplaceholder.typicode.com/users?email=${email}`)
+        .then((res) => res.data[0]);
+    },
     {
-      enabled: userQuery.data?.id,
+      initialData: existingUser,
     }
   );
-  useEffect(() => {
-    console.log({ postsQuery, userQuery });
-  });
 
   return userQuery.isLoading ? (
     "Loading user..."
   ) : (
     <div>
-      User Id: {userQuery.data.id}
-      <br />
-      <br />
-      {postsQuery.isLoading ? (
-        "Loading posts..."
-      ) : (
-        <div>Post Count: {postsQuery.data.length}</div>
-      )}
+      <pre>{JSON.stringify(userQuery.data, null, 2)}</pre>
+      {userQuery.isFetching && "Updating..."}
     </div>
   );
 }
