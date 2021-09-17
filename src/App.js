@@ -1,45 +1,69 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { ReactQueryDevtools } from "react-query-devtools";
 import axios from "axios";
-import existingUser from "./existingUser";
 
-// user email:
-// https://jsonplaceholder.typicode.com/users?email=${email}
+function Posts({ setPostId }) {
+  const postsQuery = useQuery("posts", () =>
+    axios
+      .get("https://jsonplaceholder.typicode.com/posts")
+      .then((res) => res.data)
+  );
+  return (
+    <div>
+      <h1>Posts</h1>
+      <div>
+        {postsQuery.isLoading ? (
+          "Loading posts..."
+        ) : (
+          <ul>
+            {postsQuery.data.map((post) => {
+              return (
+                <li key={post.id}>
+                  <a onClick={() => setPostId(post.id)} href="#">
+                    {post.title}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
 
-// https://jsonplaceholder.typicode.com/posts?userId=${userId}
-
-const email = "Sincere@april.biz";
-
-function MyPosts() {
-  const userQuery = useQuery(
-    "user",
-    async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return axios
-        .get(`https://jsonplaceholder.typicode.com/users?email=${email}`)
-        .then((res) => res.data[0]);
-    },
+function Post({ postId, setPostId }) {
+  const postQuery = useQuery(
+    ["post", postId],
+    () =>
+      axios
+        .get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
+        .then((res) => res.data),
     {
-      initialData: existingUser,
-      initialStale: true,
+      enabled: postId > -1,
     }
   );
-
-  return userQuery.isLoading ? (
-    "Loading user..."
-  ) : (
+  return (
     <div>
-      <pre>{JSON.stringify(userQuery.data, null, 2)}</pre>
-      {userQuery.isFetching && "Updating..."}
+      <button onClick={() => setPostId(-1)}>Back</button>
+      <br />
+      <br />
+      {postQuery.isLoading ? "Loading... " : postQuery.data.title}
     </div>
   );
 }
 
 export default function App() {
+  const [postId, setPostId] = useState(-1);
   return (
     <div>
-      <MyPosts />
+      {postId > -1 ? (
+        <Post postId={postId} setPostId={setPostId} />
+      ) : (
+        <Posts setPostId={setPostId} />
+      )}
+      {/* <MyPosts /> */}
       <ReactQueryDevtools />
     </div>
   );
