@@ -1,33 +1,48 @@
-/* eslint-disable no-use-before-define */
-import React, { useReducer, useState } from "react";
-import { useQuery, queryCache } from "react-query";
+import React from "react";
+import { useQuery } from "react-query";
 import { ReactQueryDevtools } from "react-query-devtools";
 import axios from "axios";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  useParams,
+} from "react-router-dom";
 
-const fetchPosts = async () => {
-  const posts = await axios
-    .get("https://jsonplaceholder.typicode.com/posts")
-    .then((res) => res.data);
-  posts.forEach((post) => {
-    queryCache.setQueryData(["post", post.id], post);
-  });
-  return posts;
-};
+export default function App() {
+  return (
+    <Router>
+      <Switch>
+        <Route path="/:postId">
+          <Post />
+        </Route>
+        <Route path="/">
+          <Posts />
+        </Route>
+      </Switch>
+      <ReactQueryDevtools />
+    </Router>
+  );
+}
 
-function Posts({ setPostId }) {
-  const [count, increment] = useReducer((d) => d + 1, 0);
-
-  const postsQuery = useQuery("posts", fetchPosts, {
-    onSuccess: (data) => increment(),
-    onError: (error) => {},
-    onSettled: (data, error) => {},
-  });
+function Posts() {
+  const postsQuery = useQuery(
+    "posts",
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return axios
+        .get("https://jsonplaceholder.typicode.com/posts")
+        .then((res) => res.data);
+    },
+    {
+      cacheTime: 10000,
+    }
+  );
 
   return (
     <div>
-      <h1>
-        Posts {postsQuery.isFetching && "..."} {count}
-      </h1>
+      <h1>Posts {postsQuery.isFetching && "..."}</h1>
       <div>
         {postsQuery.isLoading ? (
           "Loading posts..."
@@ -36,9 +51,7 @@ function Posts({ setPostId }) {
             {postsQuery.data.map((post) => {
               return (
                 <li key={post.id}>
-                  <a onClick={() => setPostId(post.id)} href="#">
-                    {post.title}
-                  </a>
+                  <Link to={`/${post.id}`}>{post.title}</Link>
                 </li>
               );
             })}
@@ -49,40 +62,31 @@ function Posts({ setPostId }) {
   );
 }
 
-function Post({ postId, setPostId }) {
-  const postQuery = useQuery(
-    ["post", postId],
-    () =>
-      axios
-        .get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
-        .then((res) => res.data),
-    {
-      enabled: postId > -1,
-    }
-  );
-  return (
-    <div>
-      <button onClick={() => setPostId(-1)}>Back</button>
-      <br />
-      <br />
-      {postQuery.isLoading ? "Loading... " : postQuery.data.title}
-      <br />
-      <br />
-      {postQuery.isFetching && "Updating..."}
-    </div>
-  );
-}
+function Post() {
+  const { postId } = useParams();
 
-export default function App() {
-  const [postId, setPostId] = useState(-1);
+  const postQuery = useQuery(["post", postId], async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return axios
+      .get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
+      .then((res) => res.data);
+  });
+
   return (
     <div>
-      {postId > -1 ? (
-        <Post postId={postId} setPostId={setPostId} />
+      <Link to="/">Back</Link>
+      <br />
+      <br />
+      {postQuery.isLoading ? (
+        "Loading..."
       ) : (
-        <Posts setPostId={setPostId} />
+        <>
+          {postQuery.data.title}
+          <br />
+          <br />
+          {postQuery.isFetching ? "Updating..." : null}
+        </>
       )}
-      <ReactQueryDevtools />
     </div>
   );
 }
