@@ -1,21 +1,33 @@
-import React, { useState } from "react";
+/* eslint-disable no-use-before-define */
+import React, { useReducer, useState } from "react";
 import { useQuery, queryCache } from "react-query";
 import { ReactQueryDevtools } from "react-query-devtools";
 import axios from "axios";
 
-function Posts({ setPostId }) {
-  const postsQuery = useQuery("posts", async () => {
-    const posts = await axios
-      .get("https://jsonplaceholder.typicode.com/posts")
-      .then((res) => res.data);
-    posts.forEach((post) => {
-      queryCache.setQueryData(["post", post.id], post);
-    });
-    return posts;
+const fetchPosts = async () => {
+  const posts = await axios
+    .get("https://jsonplaceholder.typicode.com/posts")
+    .then((res) => res.data);
+  posts.forEach((post) => {
+    queryCache.setQueryData(["post", post.id], post);
   });
+  return posts;
+};
+
+function Posts({ setPostId }) {
+  const [count, increment] = useReducer((d) => d + 1, 0);
+
+  const postsQuery = useQuery("posts", fetchPosts, {
+    onSuccess: (data) => increment(),
+    onError: (error) => {},
+    onSettled: (data, error) => {},
+  });
+
   return (
     <div>
-      <h1>Posts</h1>
+      <h1>
+        Posts {postsQuery.isFetching && "..."} {count}
+      </h1>
       <div>
         {postsQuery.isLoading ? (
           "Loading posts..."
