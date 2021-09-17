@@ -3,31 +3,38 @@ import { queryCache, useQuery } from 'react-query'
 import axios from 'axios'
 
 export default function App() {
-  const [show, toggle] = useReducer(d => !d, true)
   return (
     <div>
-      <button onClick={toggle}>Toggle Random</button>
-      <button
-        onClick={() =>
-          queryCache.invalidateQueries('random', {
-            refetchActive: false,
-          })
-        }
-      >
+      <button onClick={() => queryCache.invalidateQueries('random')}>
         Invalidate Random Number
       </button>
-      {show && <RandomNumber />}
+      <button
+        onClick={() => queryCache.invalidateQueries(['random', 'A'])}
+      >
+        Invalidate A
+      </button>
+      <button
+        onClick={() => queryCache.invalidateQueries(['random', 'B'])}
+      >
+        Invalidate B
+      </button>
+      <button
+        onClick={() => queryCache.invalidateQueries(['random', 'C'])}
+      >
+        Invalidate C
+      </button>
+      <RandomNumber subKey="A" />
+      <RandomNumber subKey="B" />
+      <RandomNumber subKey="C" />
     </div>
   )
 }
 
-function RandomNumber() {
+function RandomNumber({ subKey }) {
   const randomQuery = useQuery(
-    'random',
-    async () => axios.get('/api/random').then(res => res.data)
-    // {
-    //   staleTime: Infinity,
-    // }
+    ['random', subKey],
+    async () => axios.get('/api/random').then(res => res.data),
+    { staleTime: Infinity }
   )
 
   return (
