@@ -22,6 +22,7 @@ function MyPosts() {
     },
     {
       initialData: existingUser,
+      initialStale: true,
     }
   );
 
