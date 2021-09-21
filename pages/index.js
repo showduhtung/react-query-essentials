@@ -1,5 +1,6 @@
 import React from 'react'
 import { useQuery, useMutation, queryCache } from 'react-query'
+import Link from 'next/link'
 import axios from 'axios'
 import PostForm from '../components/PostForm'
 
@@ -10,7 +11,11 @@ export default function Posts() {
 
   const makePosts = async values => await axios.post('api/posts', values)
   const [createPost, createPostInfo] = useMutation(makePosts, {
-    onSuccess: () => {
+    onError: error => {
+      window.alert(error.response.data.message)
+    },
+    onSettled: () => {
+      // will run onSuccess or onError
       queryCache.invalidateQueries('posts')
     },
   })
@@ -23,10 +28,16 @@ export default function Posts() {
             <span>Loading... </span>
           ) : (
             <>
-              <h3>Posts {postsQuery.isFetching && <small>...</small>}</h3>
+              <h3>
+                Posts {postsQuery.isFetching ? <small>...</small> : null}
+              </h3>
               <ul>
                 {postsQuery.data.map(post => (
-                  <li key={post.id}>{post.title} </li>
+                  <Link href="/[postId]" as={`/${post.id}`}>
+                    <a>
+                      <li key={post.id}>{post.title}</li>
+                    </a>
+                  </Link>
                 ))}
               </ul>
               <br />
@@ -50,6 +61,9 @@ export default function Posts() {
                 : 'Create Post'
             }
           />
+          {createPostInfo.isError && (
+            <pre>{createPostInfo.error.response.data.message}</pre>
+          )}
         </div>
       </div>
     </section>
