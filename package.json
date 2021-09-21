@@ -14,7 +14,9 @@
     "react-query-devtools": "^2.1.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.0.1",
-    "styled-components": "^4.3.2"
+    "shortid": "^2.2.16",
+    "styled-components": "^4.3.2",
+    "styled-normalize": "^8.0.7"
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.3.3",
